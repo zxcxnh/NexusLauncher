@@ -1,0 +1,124 @@
+<Window x:Class="NexusLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:NexusLauncher.ViewModels"
+        xmlns:local="clr-namespace:NexusLauncher"
+        Title="NEXUS Launcher"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
+        SizeToContent="Manual"
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource ForegroundBrush}"
+        DataContext="{Binding MainWindowVM, RelativeSource={RelativeSource Self}}"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+
+    <Window.Resources>
+        <!-- Simple style for sidebar buttons -->
+        <Style x:Key="SidebarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Margin="4,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- 3 columns: Sidebar (auto), Divider (1px), Main area (star) -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="1"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border x:Name="SidebarBorder"
+                Background="{DynamicResource SidebarBrush}"
+                Grid.Column="0"
+                Width="{Binding SidebarWidth, Mode=TwoWay, Source={x:Static local:App.Current.Services.GetService(typeof(NexusLauncher.Services.ISettingsService))}}"
+                MinWidth="48"
+                MaxWidth="240">
+            <StackPanel>
+                <!-- Collapse / Expand button -->
+                <Button Style="{StaticResource SidebarButtonStyle}"
+                        Command="{Binding ToggleSidebarCommand}"
+                        Content="{Binding IsSidebarCollapsed, Converter={StaticResource BoolToCollapseExpandConverter}}"
+                        ToolTip="Collapse / Expand sidebar"/>
+
+                <!-- Navigation items -->
+                <Button Style="{StaticResource SidebarButtonStyle}"
+                        Content="Home"
+                        Command="{Binding NavigateHomeCommand}"
+                        ToolTip="Home"/>
+                <Button Style="{StaticResource SidebarButtonStyle}"
+                        Content="All Games"
+                        Command="{Binding NavigateAllGamesCommand}"
+                        ToolTip="All games"/>
+                <Button Style="{StaticResource SidebarButtonStyle}"
+                        Content="Favorites"
+                        Command="{Binding NavigateFavoritesCommand}"
+                        ToolTip="Favorites"/>
+                <Button Style="{StaticResource SidebarButtonStyle}"
+                        Content="Settings"
+                        Command="{Binding NavigateSettingsCommand}"
+                        ToolTip="Settings"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Divider -->
+        <Border Grid.Column="1" Background="{DynamicResource AccentBrush}" Width="1"/>
+
+        <!-- Main area -->
+        <DockPanel Grid.Column="2">
+            <!-- Top toolbar -->
+            <ToolBar DockPanel.Dock="Top"
+                     Background="{DynamicResource ToolbarBrush}"
+                     Height="40">
+                <TextBox Width="200"
+                         Margin="4"
+                         VerticalAlignment="Center"
+                         PlaceholderText="Search..."
+                         IsEnabled="False"/> <!-- Search not implemented yet -->
+                <Separator/>
+                <Button Content="Add Game"
+                        Command="{Binding AddGameCommand}"
+                        Margin="4,0"/>
+                <Separator/>
+                <ComboBox Width="120"
+                          ItemsSource="{Binding AvailableThemes}"
+                          SelectedItem="{Binding SelectedTheme}"
+                          Margin="4,0"/>
+                <Button Content="Apply Theme"
+                        Command="{Binding ApplyThemeCommand}"
+                        Margin="4,0"/>
+            </ToolBar>
+
+            <!-- Content host (navigation) -->
+            <ContentControl x:Name="ContentHost"
+                            Margin="8"/>
+        </DockPanel>
+    </Grid>
+</Window>
