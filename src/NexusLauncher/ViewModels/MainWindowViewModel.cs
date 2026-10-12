@@ -6,6 +6,7 @@ using NexusLauncher.Services;
 using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Controls;
 
 namespace NexusLauncher.ViewModels;
 
@@ -57,7 +58,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(themeName)) return;
         CurrentTheme = themeName;
-        _themeManager.SetAndPersist(themeName);
+        _theme_manager.SetAndPersist(themeName);
     }
 
     // Called from the MainWindow code‑behind after the ContentControl is created
