@@ -58,7 +58,7 @@
         <Border x:Name="SidebarBorder"
                 Background="{DynamicResource SidebarBrush}"
                 Grid.Column="0"
-                Width="{Binding SidebarWidth, Mode=TwoWay, Source={x:Static local:App.Current.Services.GetService(typeof(NexusLauncher.Services.ISettingsService))}}"
+                Width="{Binding SidebarWidth, Mode=TwoWay}"
                 MinWidth="48"
                 MaxWidth="240">
             <StackPanel>
