@@ -33,6 +33,9 @@ public sealed class DbService : IDbService, IDisposable
 
         _connection = new SqliteConnection($"Data Source={_dbPath}");
         _connection.Open();
+
+        // Ensure migrations / tables are present immediately after construction
+        InitializeDatabase();
     }
 
     public void InitializeDatabase()
