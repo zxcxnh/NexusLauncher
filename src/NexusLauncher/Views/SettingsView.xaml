@@ -15,8 +15,8 @@
                    FontWeight="Bold"
                    Margin="0,0,0,12"/>
 
-        <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="8">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <StackPanel Grid.Row="1" Orientation="Vertical">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
                 <TextBlock Text="Theme:" Width="80" VerticalAlignment="Center"/>
                 <ComboBox Width="150"
                           ItemsSource="{Binding AvailableThemes}"
