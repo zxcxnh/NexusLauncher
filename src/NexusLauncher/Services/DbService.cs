@@ -26,10 +26,9 @@ public sealed class DbService : IDbService, IDisposable
     {
         _logger = logger;
 
-        // Register a Dapper type handler for Guid <-> TEXT conversions
         SqlMapper.AddTypeHandler(new GuidTypeHandler());
 
-        // Use an isolated temporary DB when running under unit tests to avoid cross-test pollution
+        // Use an isolated temp DB during xUnit runs so tests do not share state across runs
         if (IsRunningUnderTest())
         {
             _dbPath = Path.Combine(Path.GetTempPath(), $"nexus_test_{Guid.NewGuid()}.db");
@@ -46,7 +45,6 @@ public sealed class DbService : IDbService, IDisposable
         _connection = new SqliteConnection($"Data Source={_dbPath}");
         _connection.Open();
 
-        // Ensure migrations / tables are present immediately after construction
         InitializeDatabase();
     }
 
@@ -65,7 +63,6 @@ public sealed class DbService : IDbService, IDisposable
 
     public void InitializeDatabase()
     {
-        // Simple migration – create table if it does not exist.
         const string createTable = @"
             CREATE TABLE IF NOT EXISTS Games (
                 Id               TEXT PRIMARY KEY,
@@ -104,6 +101,7 @@ public sealed class DbService : IDbService, IDisposable
             DateAdded = game.DateAdded.ToString("o"),
             IsFavorite = game.IsFavorite ? 1 : 0
         });
+
         _logger.LogInformation("Added game {Name} ({Id})", game.Name, game.Id);
     }
 
@@ -127,6 +125,7 @@ public sealed class DbService : IDbService, IDisposable
             game.LaunchArguments,
             IsFavorite = game.IsFavorite ? 1 : 0
         });
+
         _logger.LogInformation("Updated game {Name} ({Id})", game.Name, game.Id);
     }
 
@@ -140,16 +139,19 @@ public sealed class DbService : IDbService, IDisposable
     public void Dispose()
     {
         _connection?.Dispose();
-        // Attempt to remove temporary DB used for tests
+
         try
         {
-            if (IsRunningUnderTest() && File.Exists(_dbPath)) File.Delete(_dbPath);
+            if (IsRunningUnderTest() && File.Exists(_dbPath))
+                File.Delete(_dbPath);
         }
-        catch { }
+        catch
+        {
+            // ignore cleanup failures
+        }
     }
 }
 
-// Dapper type handler that converts TEXT GUIDs from SQLite into System.Guid values
 public sealed class GuidTypeHandler : SqlMapper.TypeHandler<Guid>
 {
     public override Guid Parse(object value)
