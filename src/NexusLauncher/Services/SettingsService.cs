@@ -68,7 +68,9 @@ public sealed class SettingsService : ISettingsService
 
         // defaults
         var defaults = new AppSettings();
-        SaveDefaultIfNeeded(defaults);
+        // assign and persist using Save() so failures are logged
+        _settings = defaults;
+        Save();
         return defaults;
     }
 
