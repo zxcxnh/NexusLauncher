@@ -44,7 +44,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         CurrentTheme = _settings.Settings.Theme;
 
         ToggleSidebarCommand = new RelayCommand(ToggleSidebar);
-        ChangeThemeCommand = new RelayCommand<string>(ChangeTheme);
+        ChangeThemeCommand = new RelayCommand<string?>(ChangeTheme);
     }
 
     private void ToggleSidebar()
@@ -54,11 +54,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _logger.LogInformation("Sidebar collapsed: {Collapsed}", IsSidebarCollapsed);
     }
 
-    private void ChangeTheme(string themeName)
+    private void ChangeTheme(string? themeName)
     {
         if (string.IsNullOrWhiteSpace(themeName)) return;
-        CurrentTheme = themeName;
-        _theme_manager.SetAndPersist(themeName);
+        CurrentTheme = themeName!;
+        _themeManager.SetAndPersist(themeName!);
     }
 
     // Called from the MainWindow code‑behind after the ContentControl is created
