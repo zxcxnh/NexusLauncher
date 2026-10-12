@@ -22,13 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Page Include="App.xaml" />
-    <Page Include="MainWindow.xaml" />
-    <Page Include="Views\\HomeView.xaml" />
-    <Page Include="Views\\SettingsView.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Resource Include="Resources\\Themes\\Dark.xaml" />
     <Resource Include="Resources\\Themes\\Light.xaml" />
   </ItemGroup>
