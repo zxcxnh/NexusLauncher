@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NexusLauncher.Infrastructure;
 using NexusLauncher.Services;
+using NexusLauncher.ViewModels;
+using NexusLauncher.Views;
 
 namespace NexusLauncher;
 
@@ -31,11 +33,10 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // Logging – console + debug (file logging can be added later)
+        // Logging – console (removed AddDebug to avoid extra package)
         services.AddLogging(builder =>
         {
             builder.AddConsole();
-            builder.AddDebug();
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
