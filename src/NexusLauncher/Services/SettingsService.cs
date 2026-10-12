@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace NexusLauncher.Services;
@@ -37,7 +38,14 @@ public sealed class SettingsService : ISettingsService
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
-            var json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true });
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+            };
+
+            var json = JsonSerializer.Serialize(_settings, options);
             File.WriteAllText(_settingsPath, json);
             _logger.LogInformation("Settings saved to {Path}", _settingsPath);
         }
@@ -45,7 +53,6 @@ public sealed class SettingsService : ISettingsService
         {
             _logger.LogError(ex, "Failed to save settings");
 
-            // Surface the real problem in tests instead of swallowing it
             if (IsRunningUnderTest())
                 throw;
         }
