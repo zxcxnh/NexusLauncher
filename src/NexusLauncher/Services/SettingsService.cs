@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
@@ -18,11 +19,14 @@ public sealed class SettingsService : ISettingsService
     public SettingsService(ILogger<SettingsService> logger)
     {
         _logger = logger;
+
         var folder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "NexusLauncher");
+
         Directory.CreateDirectory(folder);
         _settingsPath = Path.Combine(folder, SettingsFileName);
+
         _settings = LoadOrCreate();
     }
 
@@ -32,6 +36,7 @@ public sealed class SettingsService : ISettingsService
     {
         try
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
             var json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_settingsPath, json);
             _logger.LogInformation("Settings saved to {Path}", _settingsPath);
@@ -39,6 +44,10 @@ public sealed class SettingsService : ISettingsService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save settings");
+
+            // Surface the real problem in tests instead of swallowing it
+            if (IsRunningUnderTest())
+                throw;
         }
     }
 
@@ -58,7 +67,11 @@ public sealed class SettingsService : ISettingsService
             {
                 var json = File.ReadAllText(_settingsPath);
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json);
-                if (loaded != null) return loaded;
+                if (loaded != null)
+                {
+                    _settings = loaded;
+                    return loaded;
+                }
             }
         }
         catch (Exception ex)
@@ -66,21 +79,15 @@ public sealed class SettingsService : ISettingsService
             _logger.LogWarning(ex, "Could not read settings – using defaults");
         }
 
-        // defaults
         var defaults = new AppSettings();
-        // assign and persist using Save() so failures are logged
         _settings = defaults;
         Save();
         return defaults;
     }
 
-    private void SaveDefaultIfNeeded(AppSettings defaults)
+    private static bool IsRunningUnderTest()
     {
-        try
-        {
-            var json = JsonSerializer.Serialize(defaults, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_settingsPath, json);
-        }
-        catch { /* swallow – we already logged above */ }
+        return AppDomain.CurrentDomain.GetAssemblies()
+            .Any(a => (a.FullName ?? string.Empty).Contains("xunit", StringComparison.OrdinalIgnoreCase));
     }
 }
