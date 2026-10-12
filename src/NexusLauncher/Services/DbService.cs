@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Data.Sqlite;
@@ -28,17 +29,38 @@ public sealed class DbService : IDbService, IDisposable
         // Register a Dapper type handler for Guid <-> TEXT conversions
         SqlMapper.AddTypeHandler(new GuidTypeHandler());
 
-        var folder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "NexusLauncher");
-        Directory.CreateDirectory(folder);
-        _dbPath = Path.Combine(folder, DbFileName);
+        // Use an isolated temporary DB when running under unit tests to avoid cross-test pollution
+        if (IsRunningUnderTest())
+        {
+            _dbPath = Path.Combine(Path.GetTempPath(), $"nexus_test_{Guid.NewGuid()}.db");
+        }
+        else
+        {
+            var folder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "NexusLauncher");
+            Directory.CreateDirectory(folder);
+            _dbPath = Path.Combine(folder, DbFileName);
+        }
 
         _connection = new SqliteConnection($"Data Source={_dbPath}");
         _connection.Open();
 
         // Ensure migrations / tables are present immediately after construction
         InitializeDatabase();
+    }
+
+    private static bool IsRunningUnderTest()
+    {
+        try
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Any(a => (a.FullName ?? string.Empty).Contains("xunit", StringComparison.OrdinalIgnoreCase));
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void InitializeDatabase()
@@ -118,6 +140,12 @@ public sealed class DbService : IDbService, IDisposable
     public void Dispose()
     {
         _connection?.Dispose();
+        // Attempt to remove temporary DB used for tests
+        try
+        {
+            if (IsRunningUnderTest() && File.Exists(_dbPath)) File.Delete(_dbPath);
+        }
+        catch { }
     }
 }
 
