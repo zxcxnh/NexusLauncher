@@ -25,6 +25,9 @@ public sealed class DbService : IDbService, IDisposable
     {
         _logger = logger;
 
+        // Register a Dapper type handler for Guid <-> TEXT conversions
+        SqlMapper.AddTypeHandler(new GuidTypeHandler());
+
         var folder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "NexusLauncher");
@@ -115,5 +118,22 @@ public sealed class DbService : IDbService, IDisposable
     public void Dispose()
     {
         _connection?.Dispose();
+    }
+}
+
+// Dapper type handler that converts TEXT GUIDs from SQLite into System.Guid values
+public sealed class GuidTypeHandler : SqlMapper.TypeHandler<Guid>
+{
+    public override Guid Parse(object value)
+    {
+        if (value is Guid g) return g;
+        if (value is string s) return Guid.Parse(s);
+        return Guid.Parse(value.ToString()!);
+    }
+
+    public override void SetValue(IDbDataParameter parameter, Guid value)
+    {
+        parameter.Value = value.ToString();
+        parameter.DbType = DbType.String;
     }
 }
